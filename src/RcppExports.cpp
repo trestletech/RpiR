@@ -15,12 +15,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // readAnalog
-int readAnalog();
-RcppExport SEXP RpiR_readAnalog() {
+NumericVector readAnalog(NumericVector chan);
+RcppExport SEXP RpiR_readAnalog(SEXP chanSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    __result = Rcpp::wrap(readAnalog());
+    Rcpp::traits::input_parameter< NumericVector >::type chan(chanSEXP);
+    __result = Rcpp::wrap(readAnalog(chan));
     return __result;
 END_RCPP
 }
