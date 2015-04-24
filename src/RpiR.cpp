@@ -8,27 +8,29 @@
 
 using namespace Rcpp;
 
-#define BASE 100
-#define SPI_CHAN 0
-
 std::atomic<uint16_t> sharedValue(0);
+std::atomic<bool> running(false);
 uint16_t counter = 0;
 
-void call_from_thread() {
-  while (true){
-    sharedValue.store(counter, std::memory_order_relaxed);
+void run_poll(int chan, int mms) {
+  while (running.load(std::memory_order_relaxed)){
     counter++;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    if (counter > 10){
-      return;
-    }
+    sharedValue.store(counter, std::memory_order_relaxed);
+    std::this_thread::sleep_for(std::chrono::microseconds(mms));
   }
 }
 
 // [[Rcpp::export]]
-void start_thread() {
-  std::thread t1(call_from_thread);
+void start_poll(int chan, double ms) {
+  int mms = (int)(ms * 1000);
+  running.store(true, std::memory_order_relaxed);
+  std::thread t1(run_poll, chan, mms);
   t1.detach();
+}
+
+// [[Rcpp::export]]
+void stop_poll(int chan){
+  running.store(false, std::memory_order_relaxed);
 }
 
 // [[Rcpp::export]]
@@ -38,9 +40,9 @@ uint16_t read_val() {
 
 //' Initialize the Raspberry Pi for IO 
 // [[Rcpp::export]]
-void init(){
+void init(int spi_channel = 0, int pin_base = 100){
   wiringPiSetup(); 
-  mcp3004Setup(BASE, SPI_CHAN); // 3004 and 3008 are the same 4/8 channels
+  mcp3004Setup(pin_base, spi_channel); // 3004 and 3008 are the same 4/8 channels
 }
 
 //' Read an analog value fromt the Raspberry Pi
@@ -49,7 +51,7 @@ void init(){
 //' @return An integer vector describing the analog value on the 
 //'    specified channel(s), ranging in value from 0-1024.
 // [[Rcpp::export]]
-NumericVector readAnalog(NumericVector chan) {
+NumericVector read_analog(NumericVector chan) {
   int n = chan.size();
   NumericVector out(n);
 
@@ -58,7 +60,6 @@ NumericVector readAnalog(NumericVector chan) {
   }
   return out;
 }
-
 
 // [[Rcpp::export]]
 int readAnalogScalar(int chan) {

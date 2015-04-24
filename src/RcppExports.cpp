@@ -5,12 +5,25 @@
 
 using namespace Rcpp;
 
-// start_thread
-void start_thread();
-RcppExport SEXP RpiR_start_thread() {
+// start_poll
+int start_poll(int chan, double ms);
+RcppExport SEXP RpiR_start_poll(SEXP chanSEXP, SEXP msSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type chan(chanSEXP);
+    Rcpp::traits::input_parameter< double >::type ms(msSEXP);
+    __result = Rcpp::wrap(start_poll(chan, ms));
+    return __result;
+END_RCPP
+}
+// stop_poll
+void stop_poll(int chan);
+RcppExport SEXP RpiR_stop_poll(SEXP chanSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
-    start_thread();
+    Rcpp::traits::input_parameter< int >::type chan(chanSEXP);
+    stop_poll(chan);
     return R_NilValue;
 END_RCPP
 }
@@ -33,14 +46,14 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// readAnalog
-NumericVector readAnalog(NumericVector chan);
-RcppExport SEXP RpiR_readAnalog(SEXP chanSEXP) {
+// read_analog
+NumericVector read_analog(NumericVector chan);
+RcppExport SEXP RpiR_read_analog(SEXP chanSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< NumericVector >::type chan(chanSEXP);
-    __result = Rcpp::wrap(readAnalog(chan));
+    __result = Rcpp::wrap(read_analog(chan));
     return __result;
 END_RCPP
 }
