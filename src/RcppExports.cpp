@@ -5,6 +5,25 @@
 
 using namespace Rcpp;
 
+// start_thread
+void start_thread();
+RcppExport SEXP RpiR_start_thread() {
+BEGIN_RCPP
+    Rcpp::RNGScope __rngScope;
+    start_thread();
+    return R_NilValue;
+END_RCPP
+}
+// read_val
+uint16_t read_val();
+RcppExport SEXP RpiR_read_val() {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    __result = Rcpp::wrap(read_val());
+    return __result;
+END_RCPP
+}
 // init
 void init();
 RcppExport SEXP RpiR_init() {
@@ -22,6 +41,17 @@ BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< NumericVector >::type chan(chanSEXP);
     __result = Rcpp::wrap(readAnalog(chan));
+    return __result;
+END_RCPP
+}
+// readAnalogScalar
+int readAnalogScalar(int chan);
+RcppExport SEXP RpiR_readAnalogScalar(SEXP chanSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type chan(chanSEXP);
+    __result = Rcpp::wrap(readAnalogScalar(chan));
     return __result;
 END_RCPP
 }
