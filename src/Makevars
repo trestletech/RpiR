@@ -1,0 +1,2 @@
+PKG_LIBS = -L/usr/local/include -lwiringPi
+PKG_CPPFLAGS = -I/usr/lib
