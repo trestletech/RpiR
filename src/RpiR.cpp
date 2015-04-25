@@ -59,7 +59,11 @@ int readAnalogScalar(int chan) {
 
 // The function we'll run on new threads to poll for us.
 void run_poll(int chan, int mms) {
+
+  std::chrono::time_point<std::chrono::high_resolution_clock> last_run;
+
   while (next_write[chan].load(std::memory_order_relaxed) >= 0){
+    last_run = std::chrono::high_resolution_clock::now();
     int ptr = next_write[chan].load(std::memory_order_relaxed);
     buffers[chan][ptr] = readAnalogScalar(chan);
 
@@ -74,7 +78,9 @@ void run_poll(int chan, int mms) {
     }
     next_write[chan].store(ptr, std::memory_order_relaxed);
 
-    std::this_thread::sleep_for(std::chrono::microseconds(mms)); //TODO: minus loop execution time
+    int lag_mms = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - last_run).count();
+    // 75 micro seconds is empirically about the overhead for this untimed logic.
+    std::this_thread::sleep_for(std::chrono::microseconds(mms - lag_mms - 75));
   }
 }
 
