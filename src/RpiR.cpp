@@ -53,15 +53,15 @@ void run_poll(int chan, int mms) {
     buffers[chan][ptr] = readAnalogScalar(chan);
 
     ptr++;
+    if (ptr == last_read[chan] + 1) {
+      // Overflow!
+      // We're now pointing at the cell that would be included in the next read.
+      last_read[chan].store(-1, std::memory_order_relaxed);
+    }
     if (ptr >= sizes[chan]) {
       ptr = 0;
     }
     next_write[chan].store(ptr, std::memory_order_relaxed);
-
-    if (ptr == last_read[chan] + 1) {
-      // Overflow!
-      // We're now pointing at the cell that would be included in the next read.
-    }
 
     std::this_thread::sleep_for(std::chrono::microseconds(mms)); //TODO: minus loop execution time
   }
@@ -78,8 +78,8 @@ void start_poll(int chan, double ms = 1000, int buffer_size = 1024) {
   // Initialize buffer
   buffers[chan] = new int[buffer_size + 1];
   sizes[chan] = buffer_size + 1;
-  next_write[chan] = 0;
-  last_read[chan] = 0;
+  next_write[chan].store(0, std::memory_order_relaxed);
+  last_read[chan].store(sizes[chan] - 1, std::memory_order_relaxed);
 
   std::thread t1(run_poll, chan, mms);
   t1.detach();
@@ -94,6 +94,16 @@ void stop_poll(int chan){
 NumericVector read_val(int chan) {
   int start = last_read[chan].load(std::memory_order_relaxed) + 1;
   int stop = next_write[chan].load(std::memory_order_relaxed) - 1;
+
+  if (start == 0) {
+    // Means last_read was -1, i.e. overflowed
+    Function warning("warning");
+    warning("Values overflowed the buffer. Consider reading more often or increasing the size of the buffer.");
+    start = stop + 2;
+    if (start >= sizes[chan]){
+      start = 0;
+    }
+  }
 
   if (start == stop + 1){
     // No new data to read.
