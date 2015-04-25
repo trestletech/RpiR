@@ -4,7 +4,14 @@
 \alias{init}
 \title{Initialize the Raspberry Pi for IO}
 \usage{
-init()
+init(spi_channel = 0L, pin_base = 100L)
+}
+\arguments{
+\item{spi_channel}{If using an external ADC, which SPI channel is it running
+on?}
+
+\item{pin_base}{The virtual GPIO pin number which we should use for the
+fake pins we'll use for measuring analog values.}
 }
 \description{
 Initialize the Raspberry Pi for IO
