@@ -3,7 +3,31 @@
 
 An R package to interface with the RaspberryPi. Builds on the [Wiring Pi](wiringpi.com) library to support interaction with the Raspberry Pi's General Purpose I/O (GPIO) pins to read and write values to/from physical devices. You can, for instance, turn on an LED, read the state of a switch, or read the value of an analog sensor\* or even read in values from a microphone.
 
-\* The Raspberry Pi doesn't have any built-in analog inputs, so analog sensors would need to be connected through an Analog-to-Digital Converter such as the [MCP3008](http://www.adafruit.com/products/856). ([Here's a guide](http://www.raspberrypi-spy.co.uk/2013/10/analogue-sensors-on-the-raspberry-pi-using-an-mcp3008/) on how to connect the Raspberry Pi to the chip).
+> \* The Raspberry Pi doesn't have any built-in analog inputs, so analog sensors would need to be connected through an Analog-to-Digital Converter such as the [MCP3008](http://www.adafruit.com/products/856). ([Here's a guide](http://www.raspberrypi-spy.co.uk/2013/10/analogue-sensors-on-the-raspberry-pi-using-an-mcp3008/) on how to connect the Raspberry Pi to the chip).
+
+### Setup & Installation
+
+You'll need to download and install Wiring Pi on your Raspberry Pi first. Instructions to do so are [available here](http://wiringpi.com/download-and-install/).
+
+You can test to confirm that your hardware is setup and wired as expected using the [GPIO utility](http://wiringpi.com/the-gpio-utility/) that comes with Wiring Pi, for instance:
+
+```bash
+$ gpio -x mcp3004:100:0 aread 100
+515
+```
+
+Once you have Wiring Pi and your hardware configured properly, you can move on to install RpiR.
+
+Since RpiR is not available on CRAN, you'll want to install from GitHub. The easiest way to do that is using the `devtools` package.
+
+```r
+> install.packages("devtools")
+> library(devtools)
+> install_github("trestletech/RpiR")
+> library(RpiR)
+```
+
+Also, Wiring Pi requires sudo/root privileges for many operations. If you're not concerned with security, the easiest solution is just to run R with sudo privileges.
 
 ### Analog Reading
 
@@ -13,7 +37,7 @@ Polling an analog input (as an integer between 0 and 1024) can be as easy as:
 > library(RpiR)
 > RpiR::init()
 > RpiR::read_analog(0)
- [1] 752
+[1] 752
 ```
 
 However, for very fast polling or polling that requires tighter bounds on the interval between polls, RpiR offers a polling function that will spawn a background thread to poll the input for you at regular intervals. 
