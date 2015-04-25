@@ -8,40 +8,22 @@
 
 using namespace Rcpp;
 
-std::atomic<uint16_t> sharedValue(0);
-std::atomic<bool> running(false);
-uint16_t counter = 0;
+#define MAX_CHANNELS 16
 
-void run_poll(int chan, int mms) {
-  while (running.load(std::memory_order_relaxed)){
-    counter++;
-    sharedValue.store(counter, std::memory_order_relaxed);
-    std::this_thread::sleep_for(std::chrono::microseconds(mms));
-  }
-}
+int *buffers[MAX_CHANNELS];
+std::atomic<int> next_write[MAX_CHANNELS] = {};
+std::atomic<int> last_read[MAX_CHANNELS] = {};
+int sizes[MAX_CHANNELS];
 
-// [[Rcpp::export]]
-void start_poll(int chan, double ms) {
-  int mms = (int)(ms * 1000);
-  running.store(true, std::memory_order_relaxed);
-  std::thread t1(run_poll, chan, mms);
-  t1.detach();
-}
-
-// [[Rcpp::export]]
-void stop_poll(int chan){
-  running.store(false, std::memory_order_relaxed);
-}
-
-// [[Rcpp::export]]
-uint16_t read_val() {
-  return sharedValue.load(std::memory_order_relaxed);
-}
+int base_pin;
 
 //' Initialize the Raspberry Pi for IO 
 // [[Rcpp::export]]
 void init(int spi_channel = 0, int pin_base = 100){
+  base_pin = pin_base;
   wiringPiSetup(); 
+
+  // TODO: make configurable
   mcp3004Setup(pin_base, spi_channel); // 3004 and 3008 are the same 4/8 channels
 }
 
@@ -56,12 +38,95 @@ NumericVector read_analog(NumericVector chan) {
   NumericVector out(n);
 
   for (int i = 0; i < n; i++){
-    out[i] = analogRead (BASE + chan[i]);    
+    out[i] = analogRead (base_pin + chan[i]);    
   }
   return out;
 }
 
-// [[Rcpp::export]]
 int readAnalogScalar(int chan) {
-  return analogRead(BASE + chan);
+  return analogRead(base_pin + chan);
 }
+
+void run_poll(int chan, int mms) {
+  while (next_write[chan].load(std::memory_order_relaxed) >= 0){
+    int ptr = next_write[chan].load(std::memory_order_relaxed);
+    buffers[chan][ptr] = readAnalogScalar(chan);
+
+    ptr++;
+    if (ptr >= sizes[chan]) {
+      ptr = 0;
+    }
+    next_write[chan].store(ptr, std::memory_order_relaxed);
+
+    if (ptr == last_read[chan] + 1) {
+      // Overflow!
+      // We're now pointing at the cell that would be included in the next read.
+    }
+
+    std::this_thread::sleep_for(std::chrono::microseconds(mms)); //TODO: minus loop execution time
+  }
+}
+
+// [[Rcpp::export]]
+void start_poll(int chan, double ms = 1000, int buffer_size = 1024) {
+  int mms = (int)(ms * 1000);
+
+  if (chan > MAX_CHANNELS || chan < 0){
+    forward_exception_to_r(std::range_error("Don't support the given channel number."));
+  }
+
+  // Initialize buffer
+  buffers[chan] = new int[buffer_size + 1];
+  sizes[chan] = buffer_size + 1;
+  next_write[chan] = 0;
+  last_read[chan] = 0;
+
+  std::thread t1(run_poll, chan, mms);
+  t1.detach();
+}
+
+// [[Rcpp::export]]
+void stop_poll(int chan){
+  // TODO: delete array
+}
+
+// [[Rcpp::export]]
+NumericVector read_val(int chan) {
+  int start = last_read[chan].load(std::memory_order_relaxed) + 1;
+  int stop = next_write[chan].load(std::memory_order_relaxed) - 1;
+
+  if (start == stop + 1){
+    // No new data to read.
+    return NumericVector(0);
+  }
+
+  if (stop < 0){
+    stop = sizes[chan]-1;
+  }
+
+  // Update the last unread marker
+  last_read[chan].store(stop, std::memory_order_relaxed);
+
+  // calculate the length
+  int length;
+  if (stop > start) {
+    length = stop - start + 1;
+  } else if (start > stop){
+    length = sizes[chan] - start + stop + 1;
+  } else {
+    // ==
+    length = 1;    
+  }
+
+  NumericVector out(length);
+  for (int i = 0; i < length; i++){
+    int ptr = start + i;
+    if (ptr >= sizes[chan]){
+      ptr -= sizes[chan];
+    }
+    out[i] = buffers[chan][ptr];
+  }
+
+  return out;
+}
+

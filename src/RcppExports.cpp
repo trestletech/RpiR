@@ -6,15 +6,15 @@
 using namespace Rcpp;
 
 // start_poll
-int start_poll(int chan, double ms);
-RcppExport SEXP RpiR_start_poll(SEXP chanSEXP, SEXP msSEXP) {
+void start_poll(int chan, double ms, int buffer_size);
+RcppExport SEXP RpiR_start_poll(SEXP chanSEXP, SEXP msSEXP, SEXP buffer_sizeSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< int >::type chan(chanSEXP);
     Rcpp::traits::input_parameter< double >::type ms(msSEXP);
-    __result = Rcpp::wrap(start_poll(chan, ms));
-    return __result;
+    Rcpp::traits::input_parameter< int >::type buffer_size(buffer_sizeSEXP);
+    start_poll(chan, ms, buffer_size);
+    return R_NilValue;
 END_RCPP
 }
 // stop_poll
@@ -28,21 +28,24 @@ BEGIN_RCPP
 END_RCPP
 }
 // read_val
-uint16_t read_val();
-RcppExport SEXP RpiR_read_val() {
+NumericVector read_val(int chan);
+RcppExport SEXP RpiR_read_val(SEXP chanSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    __result = Rcpp::wrap(read_val());
+    Rcpp::traits::input_parameter< int >::type chan(chanSEXP);
+    __result = Rcpp::wrap(read_val(chan));
     return __result;
 END_RCPP
 }
 // init
-void init();
-RcppExport SEXP RpiR_init() {
+void init(int spi_channel, int pin_base);
+RcppExport SEXP RpiR_init(SEXP spi_channelSEXP, SEXP pin_baseSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
-    init();
+    Rcpp::traits::input_parameter< int >::type spi_channel(spi_channelSEXP);
+    Rcpp::traits::input_parameter< int >::type pin_base(pin_baseSEXP);
+    init(spi_channel, pin_base);
     return R_NilValue;
 END_RCPP
 }
@@ -54,17 +57,6 @@ BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< NumericVector >::type chan(chanSEXP);
     __result = Rcpp::wrap(read_analog(chan));
-    return __result;
-END_RCPP
-}
-// readAnalogScalar
-int readAnalogScalar(int chan);
-RcppExport SEXP RpiR_readAnalogScalar(SEXP chanSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< int >::type chan(chanSEXP);
-    __result = Rcpp::wrap(readAnalogScalar(chan));
     return __result;
 END_RCPP
 }
