@@ -5,6 +5,28 @@
 
 using namespace Rcpp;
 
+// init
+void init(int spi_channel, int pin_base);
+RcppExport SEXP RpiR_init(SEXP spi_channelSEXP, SEXP pin_baseSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type spi_channel(spi_channelSEXP);
+    Rcpp::traits::input_parameter< int >::type pin_base(pin_baseSEXP);
+    init(spi_channel, pin_base);
+    return R_NilValue;
+END_RCPP
+}
+// read_analog
+NumericVector read_analog(NumericVector chan);
+RcppExport SEXP RpiR_read_analog(SEXP chanSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type chan(chanSEXP);
+    __result = Rcpp::wrap(read_analog(chan));
+    return __result;
+END_RCPP
+}
 // start_poll
 void start_poll(int chan, double ms, int buffer_size);
 RcppExport SEXP RpiR_start_poll(SEXP chanSEXP, SEXP msSEXP, SEXP buffer_sizeSEXP) {
@@ -27,36 +49,14 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// read_val
-NumericVector read_val(int chan);
-RcppExport SEXP RpiR_read_val(SEXP chanSEXP) {
+// read_poll
+NumericVector read_poll(int chan);
+RcppExport SEXP RpiR_read_poll(SEXP chanSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< int >::type chan(chanSEXP);
-    __result = Rcpp::wrap(read_val(chan));
-    return __result;
-END_RCPP
-}
-// init
-void init(int spi_channel, int pin_base);
-RcppExport SEXP RpiR_init(SEXP spi_channelSEXP, SEXP pin_baseSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< int >::type spi_channel(spi_channelSEXP);
-    Rcpp::traits::input_parameter< int >::type pin_base(pin_baseSEXP);
-    init(spi_channel, pin_base);
-    return R_NilValue;
-END_RCPP
-}
-// read_analog
-NumericVector read_analog(NumericVector chan);
-RcppExport SEXP RpiR_read_analog(SEXP chanSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type chan(chanSEXP);
-    __result = Rcpp::wrap(read_analog(chan));
+    __result = Rcpp::wrap(read_poll(chan));
     return __result;
 END_RCPP
 }

@@ -18,6 +18,10 @@ int sizes[MAX_CHANNELS];
 int base_pin;
 
 //' Initialize the Raspberry Pi for IO 
+//' @param spi_channel If using an external ADC, which SPI channel is it running
+//'   on?
+//' @param pin_base The virtual GPIO pin number which we should use for the 
+//'   fake pins we'll use for measuring analog values.
 // [[Rcpp::export]]
 void init(int spi_channel = 0, int pin_base = 100){
   base_pin = pin_base;
@@ -25,12 +29,17 @@ void init(int spi_channel = 0, int pin_base = 100){
 
   // TODO: make configurable
   mcp3004Setup(pin_base, spi_channel); // 3004 and 3008 are the same 4/8 channels
+
+  // Init to -1 to show there are no active polls.
+  for (int i = 0; i < MAX_CHANNELS; i++){
+    next_write[i].store(-1, std::memory_order_relaxed);
+  }
 }
 
 //' Read an analog value fromt the Raspberry Pi
 //' @param chan An integer vector of channel(s) for which we should
 //'    read the analog value.
-//' @return An integer vector describing the analog value on the 
+//' @return An integer vector describing the current analog value on the 
 //'    specified channel(s), ranging in value from 0-1024.
 // [[Rcpp::export]]
 NumericVector read_analog(NumericVector chan) {
@@ -43,10 +52,12 @@ NumericVector read_analog(NumericVector chan) {
   return out;
 }
 
+// Internal scalar version of read_analog
 int readAnalogScalar(int chan) {
   return analogRead(base_pin + chan);
 }
 
+// The function we'll run on new threads to poll for us.
 void run_poll(int chan, int mms) {
   while (next_write[chan].load(std::memory_order_relaxed) >= 0){
     int ptr = next_write[chan].load(std::memory_order_relaxed);
@@ -67,9 +78,22 @@ void run_poll(int chan, int mms) {
   }
 }
 
+//' Start a Poll
+//' 
+//' Creates a background C++ thread which will poll the given channel at the
+//' specified interval, accumulating the values in a buffer until 
+//' \code{\link{read_poll}} is called.
+//' @param chan The channel number on which to poll.
+//' @param ms The number of millisecons to wait in between each poll.
+//' @param buffer_size The size of the buffer into which we should accumulate
+//'   values.
 // [[Rcpp::export]]
 void start_poll(int chan, double ms = 1000, int buffer_size = 1024) {
   int mms = (int)(ms * 1000);
+
+  if (next_write[chan].load(std::memory_order_relaxed) != -1){
+    stop("Already have a poll running on this channel. Use stop_poll() to cancel it before starting a new poll.");
+  }
 
   if (chan > MAX_CHANNELS || chan < 0){
     forward_exception_to_r(std::range_error("Don't support the given channel number."));
@@ -85,13 +109,29 @@ void start_poll(int chan, double ms = 1000, int buffer_size = 1024) {
   t1.detach();
 }
 
+//' Stop a Current Poll
+//'
+//' Stops any active poll on the specified channel, or does nothing if there
+//' was no poll.
 // [[Rcpp::export]]
 void stop_poll(int chan){
-  // TODO: delete array
+  next_write[chan].store(-1, std::memory_order_relaxed);
+  delete buffers[chan];
 }
 
+//' Reads From a Poll
+//'
+//' Read any unread values from an active poll. 
+//'
+//' If more values have accumulated than the buffer had room for, this function
+//' will throw a warning and you will receive the most recent data.
+//' @param chan The channel for which you want the unread values.
 // [[Rcpp::export]]
-NumericVector read_val(int chan) {
+NumericVector read_poll(int chan) {
+  if (next_write[chan].load(std::memory_order_relaxed) == -1){
+    stop("No poll active on the given channel.");
+  }
+
   int start = last_read[chan].load(std::memory_order_relaxed) + 1;
   int stop = next_write[chan].load(std::memory_order_relaxed) - 1;
 
