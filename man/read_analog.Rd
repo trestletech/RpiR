@@ -12,7 +12,7 @@ read the analog value.}
 }
 \value{
 An integer vector describing the current analog value on the
-   specified channel(s), ranging in value from 0-1024.
+   specified channel(s).
 }
 \description{
 Read an analog value fromt the Raspberry Pi

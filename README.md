@@ -31,7 +31,7 @@ Also, Wiring Pi requires sudo/root privileges for many operations. If you're not
 
 ### Analog Reading
 
-Polling an analog input (as an integer between 0 and 1024) can be as easy as:
+Polling an analog input can be as easy as:
 
 ```r
 > library(RpiR)

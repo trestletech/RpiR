@@ -2,19 +2,22 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' Initialize the Raspberry Pi for IO 
+#' @param setup_type Which mode wiringPi should be initialized in. Either
+#'   \code{wpi}, \code{gpio}, \code{phys}, or \code{sys}. See
+#'   \url{http://wiringpi.com/reference/setup/} for definitions of each.
 #' @param spi_channel If using an external ADC, which SPI channel is it running
 #'   on?
 #' @param pin_base The virtual GPIO pin number which we should use for the 
 #'   fake pins we'll use for measuring analog values.
-init <- function(spi_channel = 0L, pin_base = 100L) {
-    invisible(.Call('RpiR_init', PACKAGE = 'RpiR', spi_channel, pin_base))
+init <- function(setup_type = "wpi", spi_channel = 0L, pin_base = 100L) {
+    invisible(.Call('RpiR_init', PACKAGE = 'RpiR', setup_type, spi_channel, pin_base))
 }
 
 #' Read an analog value fromt the Raspberry Pi
 #' @param chan An integer vector of channel(s) for which we should
 #'    read the analog value.
 #' @return An integer vector describing the current analog value on the 
-#'    specified channel(s), ranging in value from 0-1024.
+#'    specified channel(s).
 read_analog <- function(chan) {
     .Call('RpiR_read_analog', PACKAGE = 'RpiR', chan)
 }

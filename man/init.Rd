@@ -4,9 +4,13 @@
 \alias{init}
 \title{Initialize the Raspberry Pi for IO}
 \usage{
-init(spi_channel = 0L, pin_base = 100L)
+init(setup_type = "wpi", spi_channel = 0L, pin_base = 100L)
 }
 \arguments{
+\item{setup_type}{Which mode wiringPi should be initialized in. Either
+\code{wpi}, \code{gpio}, \code{phys}, or \code{sys}. See
+\url{http://wiringpi.com/reference/setup/} for definitions of each.}
+
 \item{spi_channel}{If using an external ADC, which SPI channel is it running
 on?}
 

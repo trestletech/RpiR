@@ -5,6 +5,7 @@
 #include <atomic>
 #include <thread>
 #include <chrono>
+#include <unistd.h>
 
 using namespace Rcpp;
 
@@ -18,14 +19,38 @@ int sizes[MAX_CHANNELS];
 int base_pin;
 
 //' Initialize the Raspberry Pi for IO 
+//' @param setup_type Which mode wiringPi should be initialized in. Either
+//'   \code{wpi}, \code{gpio}, \code{phys}, or \code{sys}. See
+//'   \url{http://wiringpi.com/reference/setup/} for definitions of each.
 //' @param spi_channel If using an external ADC, which SPI channel is it running
 //'   on?
 //' @param pin_base The virtual GPIO pin number which we should use for the 
 //'   fake pins we'll use for measuring analog values.
 // [[Rcpp::export]]
-void init(int spi_channel = 0, int pin_base = 100){
+void init(std::string setup_type="wpi", int spi_channel = 0, int pin_base = 100){
   base_pin = pin_base;
-  wiringPiSetup(); 
+
+  char error_buffer[512];
+
+  // I hate to implement this here, but we need to avoid the exit() call from wiringPi.
+  // The most common route that would cause a fatal exit is not being root, so we'll
+  // just check for that ourselves in each setup case that requires root.
+  if (setup_type != "sys" && geteuid() != 0){
+    stop("To run with this setup_type, you must be root.");
+  }
+
+  if (setup_type == "wpi"){
+    wiringPiSetup();
+  } else if (setup_type == "gpio") {
+    wiringPiSetupGpio();
+  } else if (setup_type == "phys") {
+    wiringPiSetupPhys();
+  } else if (setup_type == "sys") {
+    wiringPiSetupSys();
+  } else {
+    sprintf(error_buffer, "Unrecognized setup_type: %s", setup_type.c_str());
+    stop(error_buffer);
+  }
 
   // TODO: make configurable
   mcp3004Setup(pin_base, spi_channel); // 3004 and 3008 are the same 4/8 channels
@@ -40,7 +65,7 @@ void init(int spi_channel = 0, int pin_base = 100){
 //' @param chan An integer vector of channel(s) for which we should
 //'    read the analog value.
 //' @return An integer vector describing the current analog value on the 
-//'    specified channel(s), ranging in value from 0-1024.
+//'    specified channel(s).
 // [[Rcpp::export]]
 NumericVector read_analog(NumericVector chan) {
   int n = chan.size();
