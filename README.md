@@ -50,7 +50,7 @@ Polling an analog input can be as easy as:
 
 ```r
 > library(RpiR)
-> RpiR::init()
+> RpiR::init(extension="mcp3004")
 > RpiR::read_analog(0)
 [1] 752
 ```

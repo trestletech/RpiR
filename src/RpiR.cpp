@@ -24,12 +24,14 @@ std::string current_mode;
 //' @param setup_type Which mode wiringPi should be initialized in. Either
 //'   \code{wpi}, \code{gpio}, \code{phys}, or \code{sys}. See
 //'   \url{http://wiringpi.com/reference/setup/} for definitions of each.
-//' @param spi_channel If using an external ADC, which SPI channel is it running
-//'   on?
+//' @param extension The base name of the extension to add, e.g. \code{mcp3004}.
+//' @param spi_i2c If using an external ADC, which SPI channel is it running
+//'   on, or the address to use for i2c. Look at the documentation for the
+//'   wiringPi extension for details for your particular ADC.
 //' @param pin_base The virtual GPIO pin number which we should use for the 
 //'   fake pins we'll use for measuring analog values.
 // [[Rcpp::export]]
-void init(std::string setup_type="wpi", int spi_channel = 0, int pin_base = 100){
+void init(std::string setup_type="wpi", CharacterVector extension = {"mcp23008","mcp23016","mcp23017","mcp23s08","mcp23s17","sr595","pcf8574","pcf8591","max31855","mcp3002","mcp3004","max5322","mcp4802","sn3218","mcp3422"}, int spi_i2c = 0, int pin_base = 100){
   base_pin = pin_base;
 
   // I hate to implement this here, but we need to avoid the exit() call from wiringPi.
@@ -54,8 +56,42 @@ void init(std::string setup_type="wpi", int spi_channel = 0, int pin_base = 100)
   }
   current_mode = setup_type;
 
-  // TODO: make configurable
-  mcp3004Setup(pin_base, spi_channel); // 3004 and 3008 are the same 4/8 channels
+  if (extension[0] == "mcp23008"){
+    mcp23008Setup(pinBase, spi_i2c_i2c);
+  } else if (extension[0] == "mcp23016"){
+    mcp23016Setup(pinBase, spi_i2c_i2c);
+  } else if (extension[0] == "mcp23017"){
+    mcp23017Setup(pinBase, spi_i2c_i2c);
+  } else if (extension[0] == "mcp23s08"){
+		stop("The mcp23s08 is not yet supported.");
+  } else if (extension[0] == "mcp23s17"){
+		stop("The mcp23s17 is not yet supported.");
+  } else if (extension[0] == "sr595"){
+		stop("The sr595 is not yet supported.");
+  } else if (extension[0] == "pcf8574"){
+    pcf8574Setup(pinBase, spi_i2c_i2c);
+  } else if (extension[0] == "pcf8591"){
+    pcf8591Setup(pinBase, spi_i2c_i2c);
+  } else if (extension[0] == "max31855"){
+    max31855Setup(pinBase, spi_i2c);
+  } else if (extension[0] == "mcp3002"){
+    mcp3002Setup(pinBase, spi_i2c);
+  } else if (extension[0] == "mcp3004"){
+    mcp3004Setup(pinBase, spi_i2c);
+  } else if (extension[0] == "max5322"){
+    max5322Setup(pinBase, spi_i2c);
+  } else if (extension[0] == "mcp4802"){
+    mcp4802Setup(pinBase, spi_i2c);
+  } else if (extension[0] == "sn3218"){
+		sn3218Setup(pinBase);
+  } else if (extension[0] == "mcp3422"){
+		mcp3422Setup(pinBase);
+	} else if (extension[0] == ""){
+		// No-op
+	} else {
+		stop("Unrecognized extension[0].");
+	}
+
 
   // Init to -1 to show there are no active polls.
   for (int i = 0; i < MAX_CHANNELS; i++){

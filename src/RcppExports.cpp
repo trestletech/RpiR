@@ -5,18 +5,6 @@
 
 using namespace Rcpp;
 
-// init
-void init(std::string setup_type, int spi_channel, int pin_base);
-RcppExport SEXP RpiR_init(SEXP setup_typeSEXP, SEXP spi_channelSEXP, SEXP pin_baseSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< std::string >::type setup_type(setup_typeSEXP);
-    Rcpp::traits::input_parameter< int >::type spi_channel(spi_channelSEXP);
-    Rcpp::traits::input_parameter< int >::type pin_base(pin_baseSEXP);
-    init(setup_type, spi_channel, pin_base);
-    return R_NilValue;
-END_RCPP
-}
 // read_analog
 NumericVector read_analog(NumericVector chan);
 RcppExport SEXP RpiR_read_analog(SEXP chanSEXP) {
