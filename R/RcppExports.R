@@ -54,3 +54,33 @@ read_poll <- function(chan) {
     .Call('RpiR_read_poll', PACKAGE = 'RpiR', chan)
 }
 
+#' Set the mode of a GPIO pin
+pin_mode <- function(pin, mode = as.character( c("in", "out", "pwm", "clock"))) {
+    invisible(.Call('RpiR_pin_mode', PACKAGE = 'RpiR', pin, mode))
+}
+
+#' Pull a Pin Up or Down
+pin_control <- function(pin, mode = as.character( c("off", "down", "up"))) {
+    invisible(.Call('RpiR_pin_control', PACKAGE = 'RpiR', pin, mode))
+}
+
+#' Digital Write to a Pin
+write_digital <- function(pin, signal) {
+    invisible(.Call('RpiR_write_digital', PACKAGE = 'RpiR', pin, signal))
+}
+
+#' Digital Read from a Pin
+read_digital <- function(pin) {
+    .Call('RpiR_read_digital', PACKAGE = 'RpiR', pin)
+}
+
+#' Write PWM to a signal
+write_pwm <- function(pin, value) {
+    invisible(.Call('RpiR_write_pwm', PACKAGE = 'RpiR', pin, value))
+}
+
+#' Write an Analog Signal
+write_analog <- function(pin, value) {
+    invisible(.Call('RpiR_write_analog', PACKAGE = 'RpiR', pin, value))
+}
+

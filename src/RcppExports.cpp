@@ -61,3 +61,69 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// pin_mode
+void pin_mode(int pin, CharacterVector mode);
+RcppExport SEXP RpiR_pin_mode(SEXP pinSEXP, SEXP modeSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type pin(pinSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type mode(modeSEXP);
+    pin_mode(pin, mode);
+    return R_NilValue;
+END_RCPP
+}
+// pin_control
+void pin_control(int pin, CharacterVector mode);
+RcppExport SEXP RpiR_pin_control(SEXP pinSEXP, SEXP modeSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type pin(pinSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type mode(modeSEXP);
+    pin_control(pin, mode);
+    return R_NilValue;
+END_RCPP
+}
+// write_digital
+void write_digital(int pin, bool signal);
+RcppExport SEXP RpiR_write_digital(SEXP pinSEXP, SEXP signalSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type pin(pinSEXP);
+    Rcpp::traits::input_parameter< bool >::type signal(signalSEXP);
+    write_digital(pin, signal);
+    return R_NilValue;
+END_RCPP
+}
+// read_digital
+bool read_digital(int pin);
+RcppExport SEXP RpiR_read_digital(SEXP pinSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type pin(pinSEXP);
+    __result = Rcpp::wrap(read_digital(pin));
+    return __result;
+END_RCPP
+}
+// write_pwm
+void write_pwm(int pin, int value);
+RcppExport SEXP RpiR_write_pwm(SEXP pinSEXP, SEXP valueSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type pin(pinSEXP);
+    Rcpp::traits::input_parameter< int >::type value(valueSEXP);
+    write_pwm(pin, value);
+    return R_NilValue;
+END_RCPP
+}
+// write_analog
+void write_analog(int pin, int value);
+RcppExport SEXP RpiR_write_analog(SEXP pinSEXP, SEXP valueSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type pin(pinSEXP);
+    Rcpp::traits::input_parameter< int >::type value(valueSEXP);
+    write_analog(pin, value);
+    return R_NilValue;
+END_RCPP
+}

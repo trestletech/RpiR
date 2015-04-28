@@ -18,6 +18,8 @@ int sizes[MAX_CHANNELS];
 
 int base_pin;
 
+std::string current_mode;
+
 //' Initialize the Raspberry Pi for IO 
 //' @param setup_type Which mode wiringPi should be initialized in. Either
 //'   \code{wpi}, \code{gpio}, \code{phys}, or \code{sys}. See
@@ -29,8 +31,6 @@ int base_pin;
 // [[Rcpp::export]]
 void init(std::string setup_type="wpi", int spi_channel = 0, int pin_base = 100){
   base_pin = pin_base;
-
-  char error_buffer[512];
 
   // I hate to implement this here, but we need to avoid the exit() call from wiringPi.
   // The most common route that would cause a fatal exit is not being root, so we'll
@@ -48,9 +48,11 @@ void init(std::string setup_type="wpi", int spi_channel = 0, int pin_base = 100)
   } else if (setup_type == "sys") {
     wiringPiSetupSys();
   } else {
-    sprintf(error_buffer, "Unrecognized setup_type: %s", setup_type.c_str());
+    char error_buffer[64];
+    snprintf(error_buffer, 64, "Unrecognized setup_type: %s", setup_type.c_str());
     stop(error_buffer);
   }
+  current_mode = setup_type;
 
   // TODO: make configurable
   mcp3004Setup(pin_base, spi_channel); // 3004 and 3008 are the same 4/8 channels
@@ -168,7 +170,7 @@ NumericVector read_poll(int chan) {
 
   if (start == 0) {
     // Means last_read was -1, i.e. overflowed
-    Function warning("warning");
+		Function warning("warning");
     warning("Values overflowed the buffer. Consider reading more often or increasing the size of the buffer.");
     start = stop + 2;
     if (start >= sizes[chan]){
@@ -211,3 +213,85 @@ NumericVector read_poll(int chan) {
   return out;
 }
 
+//' Set the mode of a GPIO pin
+// [[Rcpp::export]]
+void pin_mode(int pin, CharacterVector mode = CharacterVector::create("in", "out", "pwm", "clock")){
+  int mode_i;
+  
+	if (current_mode == "sys"){
+		Function warning("warning");
+		warning("Setting the pin mode has no effect when in sys mode.");
+	}
+
+  if (mode[0] == "in"){
+    mode_i = INPUT;
+  } else if (mode[0] == "out"){
+		mode_i = OUTPUT;
+  } else if (mode[0] == "pwm"){
+		mode_i = PWM_OUTPUT;
+  } else if (mode[0] == "clock"){
+		mode_i = GPIO_CLOCK;
+	}
+
+  pinMode(pin, mode_i);
+}
+
+//' Pull a Pin Up or Down
+// [[Rcpp::export]]
+void pin_control(int pin, CharacterVector mode = CharacterVector::create("off", "down", "up")){
+  int mode_i;
+  
+  if (mode[0] == "off"){
+    mode_i = PUD_OFF;
+  } else if (mode[0] == "down"){
+		mode_i = PUD_DOWN;
+  } else if (mode[0] == "up"){
+		mode_i = PUD_UP;
+	} else {
+    char error_buffer[64];
+    snprintf(error_buffer, 64, "Unrecognized mode: %s", as<std::string>(mode[0]).c_str());
+    stop(error_buffer);
+  }
+
+  pullUpDnControl(pin, mode_i);
+}
+
+//' Digital Write to a Pin
+// [[Rcpp::export]]
+void write_digital(int pin, bool signal){
+  int val = LOW;
+
+  if (signal){
+		val = HIGH;
+  } 
+
+  digitalWrite(pin, signal);
+}
+
+//' Digital Read from a Pin
+// [[Rcpp::export]]
+bool read_digital(int pin){
+  int val = digitalRead(pin);
+  if (val == HIGH){
+		return true;
+	} else {
+		return false;
+	}
+}
+
+//' Write PWM to a signal
+// [[Rcpp::export]]
+void write_pwm(int pin, int value){
+  if (value < 0 || value > 1024){
+		stop("Value must be between 0 and 1024.");
+	}
+
+	pwmWrite(pin, value);
+}
+
+
+//' Write an Analog Signal
+// [[Rcpp::export]]
+void write_analog(int pin, int value){
+	analogWrite(pin, value);
+}

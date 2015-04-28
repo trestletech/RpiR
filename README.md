@@ -29,7 +29,22 @@ Since RpiR is not available on CRAN, you'll want to install from GitHub. The eas
 
 Also, Wiring Pi requires sudo/root privileges for many operations. If you're not concerned with security, the easiest solution is just to run R with sudo privileges.
 
-### Analog Reading
+### Digital Reading & Writing
+
+```r
+> library(RpiR)
+> RpiR::init()
+> RpiR::pin_mode(1, "in")
+> RpiR::read_digital(1)
+[1] TRUE
+>
+>
+> RpiR::pin_mode(2, "out")
+> RpiR::write_digital(2, TRUE)  # To write a 1/HIGH to pin 2
+> RpiR::write_digital(2, FALSE) # To write a 0/LOW to pin 2
+```
+
+### Analog Reading & Writing
 
 Polling an analog input can be as easy as:
 
@@ -50,3 +65,11 @@ However, for very fast polling or polling that requires tighter bounds on the in
 ```
 
 Preliminary testing on a Raspberry Pi 2 Model B shows a maximum analog polling frequency approaching 10kHz using a MCP3008 ADC.
+
+Likewise, `write_analog` or `write_pwm` can be used to write an analog signal via ADC or PWM, respectively.
+
+### Controlling Pins
+
+`pin_mode` can be used to set the purpose of a pin to either input, digital output, PWM output, or a GPIO clock.
+
+`pin_control` is used to set the internal resistor for a pin to either off, up, or down.
