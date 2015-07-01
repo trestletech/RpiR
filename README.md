@@ -73,3 +73,12 @@ Likewise, `write_analog` or `write_pwm` can be used to write an analog signal vi
 `pin_mode` can be used to set the purpose of a pin to either input, digital output, PWM output, or a GPIO clock.
 
 `pin_control` is used to set the internal resistor for a pin to either off, up, or down.
+
+## Images
+
+As I develop them, I'll make Raspberry Pi images with R available here:
+
+ - [Ubuntu with R, RpiR & Shiny Server installed](https://s3.amazonaws.com/raspberry-pi-images/ss-rpi-cleaned.img.gz) - 8GB 
+
+
+(If anyone's aware of better ways to distribute these, please let me know.)
